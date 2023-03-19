@@ -37,6 +37,11 @@ function filterByQuery(query, tasksArray) {
   return filteredResults;
 }
 
+function findById(id, tasksArray) {
+  const result = tasksArray.filter(task => task.id === id)[0];
+  return result;
+}
+
 app.get('/tasks', (req, res) => {
   let results = tasks;
   if(req.query) {
@@ -45,10 +50,14 @@ app.get('/tasks', (req, res) => {
   res.json(results)
 })
 
-//querying just descriptions? 
-app.get('/descriptions', (req,res) => {
-  const descriptions = tasks.map(task => task.description);
-  res.send(descriptions)
+
+app.get('/api/tasks/:id', (req,res) => {
+  const result = findById(req.params.id, tasks);
+  if (result) {
+  res.json(result);
+  } else {
+    res.sendStatus(404);
+  }
 })
 
 
@@ -56,4 +65,3 @@ app.listen(PORT, () => {
     console.log(`API server now on port ${PORT}!`);
   });
 
-  console.log("hello2")
