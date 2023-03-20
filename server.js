@@ -1,15 +1,15 @@
 const { tasks } = require('./data/tasks');
 //required modules
 const express = require('express');
-// const fs = require('fs');
-// const path = require('path');
+const fs = require('fs');
+const path = require('path');
 
 const PORT = process.env.PORT || 3001;
 
 const app = express();
 
-// app.use(express.urlencoded ( { extended: true}));
-// app.use(express.json());
+app.use(express.urlencoded ( { extended: true}));
+app.use(express.json());
 // app.use(express.static('public'));
 
 // app.get('/', (req, res) => {
@@ -42,6 +42,29 @@ function findById(id, tasksArray) {
   return result;
 }
 
+function createNewTask(body, tasksArray){
+  const task = body;
+  tasksArray.push(task);
+  fs.writeFileSync(
+    path.join(__dirname, './data/tasks.json'),
+    JSON.stringify({ tasks: tasksArray }, null, 2)
+  );
+  return task;
+}
+
+function validateTask(task) {
+  if (!task.description || typeof task.description !== 'string') {
+    return false;
+  }
+  if (!task.date || typeof task.date !== 'string') {
+    return false;
+  }
+  if (!task.status || typeof task.status !== 'string') {
+    return false;
+  }
+  return true;
+}
+
 app.get('/tasks', (req, res) => {
   let results = tasks;
   if(req.query) {
@@ -59,6 +82,19 @@ app.get('/api/tasks/:id', (req,res) => {
     res.sendStatus(404);
   }
 })
+
+app.post('/api/tasks', (req, res) => {
+  // set id based on what the next index of the array will be
+  req.body.id = tasks.length.toString();
+  
+  // if any data in req.body is incorrect, send 400 error back
+  if(!validateTask(req.body)){
+    res.status(400).send('The task is not properly formatted.');
+  } else {
+    const task = createNewTask(req.body, tasks);
+    res.json(task);
+  }
+});
 
 
 app.listen(PORT, () => {
